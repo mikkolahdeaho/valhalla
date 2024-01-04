@@ -107,22 +107,27 @@ jobs:
           %BUILD_DIR%\%BUILD_CFG%\valhalla_run_route.exe --config .\test\win\valhalla.json -j "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}, {\"lat\": 52.093113, \"lon\": 5.100918}], \"costing\": \"auto\"}"
           %BUILD_DIR%\%BUILD_CFG%\valhalla_run_isochrone.exe --config .\test\win\valhalla.json -j "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}], \"costing\": \"auto\", \"contours\":[{\"time\":15,\"color\":\"ff0000\"}]}"
         displayName: 'Test some executables'
-        
-      - task: CopyFiles@2
+
+      - script: |
+          dir $(Agent.WorkFolder)\build
+        displayName: 'List Artifact Directory Content'
+
+      - task: ArchiveFiles@2
+        displayName: Zippaus
         inputs:
-          sourceFolder: '$(Build.SourcesDirectory)'
-          contents: '**/$(BuildConfiguration)/**/?(*.exe|*.dll|*.pdb)'
-          targetFolder: '$(Build.ArtifactStagingDirectory)'
-          
+          rootFolderOrFile: $(Agent.WorkFolder)\build
+          includeRootFolder: false
+          archiveFile: '$(Build.ArtifactStagingDirectory)/valhalla-windows-x64.zip'
+
       - task: PublishBuildArtifacts@1
         inputs:
-          pathToPublish: '$(Build.ArtifactStagingDirectory)'
-          artifactName: drop
+          PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+          ArtifactName: 'drop'
+          publishLocation: 'Container'
 
-      - task: DownloadBuildArtifacts@0
+      - task: DownloadBuildArtifacts@1
         inputs:
           buildType: 'current'
-          downloadType: 'single'
-          artifactName: 'drop'
+          downloadType: 'specific'
+          itemPattern: 'valhalla-windows-x64.zip'
           downloadPath: '$(System.ArtifactsDirectory)'
-
